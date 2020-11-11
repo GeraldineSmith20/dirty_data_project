@@ -1,18 +1,11 @@
----
-title: "R Notebook"
-output: html_notebook
----
-
-```{r}
 # Load packages required
 library(tidyverse)
 library(janitor)
 library(assertr)
 library(readxl)
-```
 
-```{r}
-# read in data
+#---------------------read in data---------------------------------------------
+
 candy_2015 <- read_xlsx("../raw_data/boing-boing-candy-2015.xlsx") %>% 
   select(c("Timestamp":"[York Peppermint Patties]"))
 
@@ -21,11 +14,9 @@ candy_2016 <- read_xlsx("../raw_data/boing-boing-candy-2016.xlsx") %>%
 
 candy_2017 <- read_xlsx("../raw_data/boing-boing-candy-2017.xlsx") %>% 
   select(c("Internal ID":"Q6 | York Peppermint Patties"))
-```
 
-```{r}
 # 2015 data - fixing column names, adding required structure for merging with
-# other data sets and selecting relevant columns
+# other data sets and selecting relevant columns-------------------------------
 
 candy_2015 <- clean_names(candy_2015) %>% 
   mutate(internal_id = seq.int(1, 5630),
@@ -42,27 +33,17 @@ candy_2015 <- clean_names(candy_2015) %>%
          trick_or_treating, 
          country, 
          butterfinger:york_peppermint_patties)
-```
 
-```{r}
-# moving candy types and feelings to column as value-attribute pairs
+#--------moving candy types and feelings to column as value-attribute pairs----
 
 candy_2015_tidy <- candy_2015 %>% 
   pivot_longer(cols = c(butterfinger:york_peppermint_patties),
                names_to = "candy_type",
                values_to = "candy_feelings")
-  
-```
 
 
-```{r}
-colnames(candy_2015)
-```
-
-
-```{r}
 # 2016 data - fixing column names, adding required structure for merging with
-# other data sets and selecting relevant columns
+# other data sets and selecting relevant columns-------------------------------
 
 candy_2016 <- clean_names(candy_2016) %>%
   
@@ -75,7 +56,7 @@ candy_2016 <- clean_names(candy_2016) %>%
          age = how_old_are_you,
          country = 
            which_country_do_you_live_in) %>% 
-
+  
   select(year,
          internal_id,
          age,
@@ -83,23 +64,15 @@ candy_2016 <- clean_names(candy_2016) %>%
          trick_or_treating,
          country,
          x100_grand_bar:york_peppermint_patties)
-```
 
-```{r}
-# moving candy types and feelings to column as value-attribute pairs
+
+#------moving candy types and feelings to column as value-attribute pairs------
 
 candy_2016_tidy <- candy_2016 %>% 
   pivot_longer(cols = c(x100_grand_bar:york_peppermint_patties),
                names_to = "candy_type",
                values_to = "candy_feelings")
-```
 
-
-```{r}
-colnames(candy_2016)
-```
-
-```{r}
 # 2017 data - fixing column names, adding required structure for merging with
 # other data sets and selecting relevant columns
 
@@ -119,76 +92,26 @@ candy_2017 <- clean_names(candy_2017) %>%
          trick_or_treating,
          country,
          q6_100_grand_bar:q6_york_peppermint_patties)
-  
-```
 
-```{r}
-# moving candy types and feelings to column as value-attribute pairs
+#------moving candy types and feelings to column as value-attribute pairs------
 
 candy_2017_tidy <- candy_2017 %>% 
   pivot_longer(cols = c(q6_100_grand_bar:q6_york_peppermint_patties),
                names_to = "candy_type",
                values_to = "candy_feelings")
-```
 
-
-
-```{r}
-colnames(candy_2017)
-```
-
-```{r}
-# joining all data sets together
+#-------appending all data sets together---------------------------------------
 
 all_candy_data <- bind_rows(candy_2015_tidy, candy_2016_tidy, candy_2017_tidy)
-```
-
-
-```{r}
-distinct(all_candy_data, age)
-```
-
-```{r}
-all_candy_data_age <- all_candy_data %>% 
-  mutate(age = str_extract(age, pattern = "[0-9]{2}")) %>%
-  mutate(age = as.numeric(age)) %>% 
-  group_by(age) %>% 
-  summarise(age = n())
-```
-
-```{r}
-
-```
 
 
 
 
 
-```{r}
-# write cleaned, combined data set to csv file
+
+#----------write cleaned, combined data set to csv file------------------------
 
 write_csv(all_candy_data, file = "../clean_data/cleaned_candy_data")
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
