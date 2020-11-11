@@ -1,0 +1,86 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+# Load packages required
+library(tidyverse)
+library(janitor)
+library(assertr)
+library(readxl)
+```
+
+```{r}
+# read in data
+candy_2015 <- read_xlsx("../raw_data/boing-boing-candy-2015.xlsx") %>% 
+  select(c("Timestamp":"[York Peppermint Patties]"))
+
+candy_2016 <- read_xlsx("../raw_data/boing-boing-candy-2016.xlsx") %>% 
+  select(c("Timestamp":"[York Peppermint Patties]"))
+
+candy_2017 <- read_xlsx("../raw_data/boing-boing-candy-2017.xlsx") %>% 
+  select(c("Internal ID":"Q6 | York Peppermint Patties"))
+```
+
+```{r}
+candy_2015 <- clean_names(candy_2015) %>% 
+  mutate(internal_id = seq.int(1, 5630),
+         gender = "unknown",
+         country = "unknown") %>% 
+  rename(age = how_old_are_you,
+         trick_or_treating = 
+           are_you_going_actually_going_trick_or_treating_yourself) %>% 
+  select(internal_id, 
+         age, 
+         gender, 
+         trick_or_treating, 
+         country, 
+         butterfinger:york_peppermint_patties)
+```
+
+
+```{r}
+colnames(candy_2015)
+```
+
+
+```{r}
+candy_2016 <- clean_names(candy_2016) %>%
+  
+  mutate(internal_id = seq.int(6000, 7258)) %>%
+  
+  rename(trick_or_treating =
+           are_you_going_actually_going_trick_or_treating_yourself,
+         gender = your_gender,
+         age = how_old_are_you,
+         country = 
+           which_country_do_you_live_in) %>% 
+
+  select(internal_id,
+         age,
+         gender,
+         trick_or_treating,
+         country,
+         x100_grand_bar:york_peppermint_patties)
+```
+
+```{r}
+colnames(candy_2016)
+```
+
+```{r}
+candy_2017 <- clean_names(candy_2017)
+```
+
+
+```{r}
+colnames(candy_2017)
+```
+
+
+
+
+
+
+

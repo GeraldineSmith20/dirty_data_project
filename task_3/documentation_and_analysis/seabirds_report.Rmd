@@ -1,0 +1,190 @@
+---
+title: "seabirds_report"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction to Dataset
+
+The seabirds data set consisted of an .xls file, which contained two main 
+worksheets.  The other two worksheets contained a key of abbreviations to assist
+in understanding what the variables were in each worksheet.
+
+The data records counts of seabirds of different species observed from ships 
+during the period 31st July 1969 to 21st December 1990.  Location of recordings
+(by latitude and longitude) where also recorded in the dataset.  
+
+## List of Assumptions
+
+In looking at the analysis required, it was assumed that information on specific
+dates and times would not be required and it was decided that cleaning was not
+really required on these particular columns.
+
+It was also assumed that many of the columns in the raw data would not be required
+and these would also be dropped at the initial stages of cleaning.
+
+Assumption was also taken that all the bird count figures were accurate.  The 
+range was established as count of 1 up to 99,999(6 observations).  It is possible 
+that the latter figures are erroneous, however some research confirmed that 
+colonies of certain birds (like the short tailed shearwater) can be upwards of 
+millions so this data had to be taken at face value.
+
+## Cleaning the Data
+
+1. Bird and ship worksheets were read in as separate tables using read_xls.
+2. Column names were cleaned using the _janitor_ package clean_names, with some 
+requiring re-naming due to excessive name length.
+3. Columns required for analysis (including all names, latitude/longitude) were
+  selected.
+4. A __LEFT__ join was then performed on the birds and ship data to compile the
+data into one table.
+5. Two hard-coded strings were then removed from the _time_ and 
+_species_common_name_ columns as shown below:
+
+```{r, eval=FALSE}
+#--------------Recoding time column--------------------------------------------
+
+bird_observations <- bird_observations %>% 
+  mutate(time = str_remove(time, pattern = "1899-12-31 "))
+
+# -------Removing the rows where no bird counts were definitely recorded-------
+
+bird_observations <- bird_observations %>% 
+  filter(!str_detect(species_common_name, pattern = "NO BIRDS RECORDED"))
+
+```
+
+6. The _species_common_name_ then required a number of cleaning steps to remove
+additional variables that had been recorded in the same string as the species
+name (such as bird age category or plummage colours).  Regex patterns were used
+to remove these erroneous strings, as it was noted that they consisted of 2 or 
+more capital letters in a row, or capitals followed by numbers.  It was also 
+observed that there was some additional white space in some of the observations
+so this was removed with the _trim_ws_ function:
+
+```{r, eval=FALSE}
+bird_observations <- bird_observations %>% 
+  mutate(species_common_name = 
+           str_remove(species_common_name, 
+                      pattern = ("[A-Z]{2,}[0-9]*")
+           )) %>%
+  mutate(species_common_name =
+           str_remove(species_common_name,
+                      pattern = ("[A-Z]{2,}")
+           )) %>% 
+  
+  mutate(species_common_name = 
+           str_remove(species_common_name, 
+                      pattern = " sensu lato"
+           )) %>% 
+  
+  mutate(species_common_name = 
+           str_remove(species_common_name, 
+                      pattern = "[(][A-z]+[)]"
+           )) %>% 
+  
+  mutate(species_common_name = 
+           str_remove(species_common_name, 
+                      pattern = "[ ]M$"
+           )) %>% 
+  
+  mutate(species_common_name =
+           trimws(species_common_name))
+```
+
+7. Similar cleaning steps were performed on _species_scientific_name_ and 
+_species_abbreviation_ , with slight differences in the regex patterns used.
+
+8. It was decided to recode the _month_ column, in case it would become useful 
+in future analyses:
+
+```{r, eval=FALSE}
+bird_observations <- bird_observations %>% 
+  mutate(month = recode(month, 
+                        "1" = "January",
+                        "2" = "February",
+                        "3" = "March",
+                        "4" = "April",
+                        "5" = "May",
+                        "6" = "June",
+                        "7" = "July",
+                        "8" = "August",
+                        "9" = "September",
+                        "10" = "October",
+                        "11" = "November",
+                        "12" = "December")
+  )
+```
+
+9. There were a number of observations where the count of birds were recorded as 
+N/A.  It was decided not to drop these as there had been similar N/A values 
+removed where _species_common_name_ had been recorded as "NO BIRDS RECORDED".
+It was therefore decided to impute these values as a one-off sighting and give 
+them a count value of 1:
+
+```{r, eval=FALSE}
+bird_observations <- bird_observations %>% 
+  mutate(bird_count = coalesce(bird_count, 1, na.rm = TRUE))
+```
+
+10. The final cleaning step required the data be written to clean_data and this 
+was achieved using the _write_csv_ function:
+
+```{r, eval=FALSE}
+write_csv(bird_observations, file = "clean_data/cleaned_bird_observations")
+```
+
+
+## Results and Analysis
+
+__Q1. Which bird had the most individual sightings?__  
+      Wandering albatross  
+      Diomedea antipodensis / exulans  
+      DIOANTEXU  
+
+__Q2. Which bird had the highest total count?__ 
+      Short-tailed shearwater  	
+      Puffinus tenuirostris  	
+      PUFTEN  
+    
+__Q3. Which bird had the highest total count above a latitude of -30?__  
+      Wedge-tailed shearwater  	
+      Puffinus pacificus  	
+      PUFPAC  
+    
+__Q4. How many different types of birds were only ever seen in groups of 1?__  
+      64  
+
+__Q5. How many penguins were seen?__  
+      162  
+
+
+## Additional Analysis
+
+No additional analysis carried out at this time (I am running out of time to do 
+the candy data set!)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

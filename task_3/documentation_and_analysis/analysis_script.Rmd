@@ -5,11 +5,12 @@ output: html_notebook
 # Load required packages
 ```{r}
 library(tidyverse)
+library(here)
 ```
 
 # Read in cleaned data
 ```{r}
-cleaned_birds <- read_csv("../clean_data/cleaned_bird_observations")
+cleaned_birds <- read_csv(here("clean_data/cleaned_bird_observations"))
 
 ```
 

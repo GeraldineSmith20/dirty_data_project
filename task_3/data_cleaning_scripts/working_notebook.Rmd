@@ -88,15 +88,18 @@ bird_observations <- bird_observations %>%
 distinct(bird_observations, species_common_name)
 ```
 
-
 ```{r}
 # Cleaning species common names
 
 bird_observations <- bird_observations %>% 
   mutate(species_common_name = 
            str_remove(species_common_name, 
-                      pattern = ("[ ]{1,}[A-Z]{2,}[0-9]*")
+                      pattern = ("[A-Z]{2,}[0-9]*")
                          )) %>%
+  mutate(species_common_name =
+           str_remove(species_common_name,
+                      pattern = ("[A-Z]{2,}")
+                      )) %>% 
   
   mutate(species_common_name = 
            str_remove(species_common_name, 
@@ -108,10 +111,20 @@ bird_observations <- bird_observations %>%
                           pattern = "[(][A-z]+[)]"
                           )) %>% 
   
+  mutate(species_common_name = 
+           str_remove(species_common_name, 
+                          pattern = "[ ]M$"
+                          )) %>% 
+  
   mutate(species_common_name =
            trimws(species_common_name))
 
 ```
+
+```{r}
+distinct(bird_observations, species_common_name)
+```
+
 
 ```{r}
 # Cleaning species scientific name
@@ -120,20 +133,56 @@ bird_observations <- bird_observations %>%
   mutate(species_scientific_name = 
            str_remove(species_scientific_name, 
                           pattern = ("[A-Z]{2,}[0-9]*")
-                         )) %>% 
+                         )) %>%
+  
+   mutate(species_scientific_name = 
+           str_remove(species_scientific_name, 
+                          pattern = ("[A-Z]{2,}")
+                      )) %>% 
+  
    mutate(species_scientific_name =
-           trimws(species_scientific_name))
+           trimws(species_scientific_name)) %>% 
+
+   mutate(species_scientific_name = 
+           str_remove(species_scientific_name, 
+                          pattern = "[ ]M$"
+                          ))
+  
+  
+```
+
+```{r}
+distinct(bird_observations, species_scientific_name)
 ```
 
 
+
 ```{r}
+# Cleaning species abbreviation
 bird_observations <- bird_observations %>% 
   mutate(species_abbreviation = 
            str_remove(species_abbreviation, 
                       pattern = ("[ ][A-Z]{2,}[0-9]*")
+                         ))%>%
+  
+  mutate(species_abbreviation =
+           str_remove(species_abbreviation,
+                      pattern = ("[ ][A-Z]{2,}")
                       )) %>% 
-   mutate(species_abbreviation =
+  
+  mutate(species_abbreviation = 
+           str_remove(species_abbreviation, 
+                          pattern = "[ ]M$"
+                          )) %>% 
+  
+  mutate(species_abbreviation =
            trimws(species_abbreviation))
+
+```
+
+
+```{r}
+distinct(bird_observations_2, species_abbreviation)
 ```
 
 ```{r}
