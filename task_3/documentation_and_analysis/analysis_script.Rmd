@@ -1,0 +1,95 @@
+---
+title: "analysis_script"
+output: html_notebook
+---
+# Load required packages
+```{r}
+library(tidyverse)
+```
+
+# Read in cleaned data
+```{r}
+cleaned_birds <- read_csv("../clean_data/cleaned_bird_observations")
+
+```
+
+# Question 1 - Which bird had the most individual sightings?
+```{r}
+highest_individual_sightings <- cleaned_birds %>% 
+  group_by(species_common_name) %>% 
+  summarise(no_sightings = n()) %>% 
+  slice_max(no_sightings)
+
+```
+
+```{r}
+cleaned_birds %>% 
+  select(species_common_name, species_scientific_name, species_abbreviation) %>% 
+  filter(species_common_name == highest_individual_sightings$species_common_name) %>% 
+  slice_head(n =1)
+```
+
+
+# Question 2 - Which bird had the highest total count?
+```{r}
+highest_total_count <- cleaned_birds %>% 
+  group_by(species_common_name) %>% 
+  summarise(highest_total = sum(bird_count)) %>% 
+  slice_max(highest_total)
+```
+```{r}
+cleaned_birds %>% 
+  select(species_common_name, species_scientific_name, species_abbreviation) %>% 
+  filter(species_common_name == highest_total_count$species_common_name) %>% 
+  slice_head(n = 1)
+```
+
+
+# Question 3 - Which bird had the highest total count above a latitude of -30?
+
+```{r}
+highest_total_lat <- cleaned_birds %>% 
+  filter(lat >= -30) %>% 
+  group_by(species_common_name) %>% 
+  summarise(highest_total = sum(bird_count)) %>% 
+  slice_max(highest_total)
+```
+
+```{r}
+cleaned_birds %>% 
+  select(species_common_name, species_scientific_name, species_abbreviation) %>% 
+  filter(species_common_name == highest_total_lat$species_common_name) %>% 
+  slice_head(n = 1)
+```
+
+
+# Question 4 - How many different types of birds were only ever seen in groups of 1
+
+```{r}
+cleaned_birds %>% 
+  group_by(species_common_name) %>% 
+  filter(max(bird_count) == 1) %>% 
+  nrow()
+
+```
+
+# Question 5 - How many penguins were seen? 
+
+```{r}
+cleaned_birds %>% 
+  mutate(is_penguin = str_detect(species_common_name, pattern = "[Pp]enguin")) %>% 
+  filter(is_penguin == TRUE) %>% 
+  summarise(sum(bird_count))
+```
+
+
+
+
+
+
+
+
+
+
+
+
