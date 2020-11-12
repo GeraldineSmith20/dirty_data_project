@@ -145,21 +145,41 @@ all_candy_data <- bind_rows(candy_2015_tidy, candy_2016_tidy, candy_2017_tidy)
 
 
 ```{r}
-distinct(all_candy_data, age)
+all_candy_data %>% 
+  filter(is.na(age))
 ```
 
+
 ```{r}
-all_candy_data_age <- all_candy_data %>% 
+# extract age values as those with 2 numbers, then replace N/A's with median of age
+
+all_candy_data <- all_candy_data %>% 
   mutate(age = str_extract(age, pattern = "[0-9]{2}")) %>%
   mutate(age = as.numeric(age)) %>% 
-  group_by(age) %>% 
-  summarise(age = n())
+  mutate(age = coalesce(age, median(age, na.rm = TRUE)))
+```
+
+
+
+```{r}
+all_candy_data <- all_candy_data %>% 
+  mutate(
+    gender = if_else(
+      gender == "I'd rather not say", "Undisclosed",
+      gender
+    )
+) %>% 
+  mutate(gender = replace_na(gender, "Unknown")) %>% 
+  mutate(gender = if_else(
+    gender == "unknown", "Unknown",
+    gender
+  )) 
 ```
 
 ```{r}
-
+all_candy_data %>% 
+  filter(is.na(trick_or_treating))
 ```
-
 
 
 
