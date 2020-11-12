@@ -162,6 +162,8 @@ all_candy_data <- all_candy_data %>%
 
 
 ```{r}
+# Replacing values in the gender column to reduce no. of categories
+
 all_candy_data <- all_candy_data %>% 
   mutate(
     gender = if_else(
@@ -177,9 +179,105 @@ all_candy_data <- all_candy_data %>%
 ```
 
 ```{r}
-all_candy_data %>% 
-  filter(is.na(trick_or_treating))
+# replacing NA's in the trick or treating column with "Unknown"
+all_candy_data <- all_candy_data %>% 
+  mutate(trick_or_treating = replace_na(trick_or_treating, "Unknown"))
 ```
+
+```{r}
+distinct(all_candy_data, country)
+```
+
+```{r}
+#cleaning the country column the hard way - PART 1
+
+all_candy_data <- all_candy_data %>% 
+ mutate(country_clean = tolower(country)) %>% 
+  mutate(country_clean = case_when(
+    startsWith(country_clean,"uni") ~ "usa",
+    startsWith(country_clean, "usa") ~ "usa",
+    startsWith(country_clean, "u.") ~ "usa",
+    startsWith(country_clean, "us") ~ "usa",
+    startsWith(country_clean, "u s") ~ "usa",
+    startsWith(country_clean, "trump") ~ "usa",
+    startsWith(country_clean, "mur") ~ "usa",
+    startsWith(country_clean, "new") ~ "usa",
+    startsWith(country_clean, "north carolina") ~ "usa",
+    startsWith(country_clean, "pitts") ~ "usa",
+    startsWith(country_clean, "the netherlands") ~ "netherlands",
+    startsWith(country_clean, "god") ~ "unknown",
+    startsWith(country_clean, "not the") ~ "unknown",
+    startsWith(country_clean, "espa") ~ "spain",
+    TRUE ~ as.character(country_clean))) %>% 
+mutate(country_clean = case_when(
+    endsWith(country_clean, "usa") ~ "usa",
+    endsWith(country_clean, "sa!") ~ "usa",
+    endsWith(country_clean, "ates") ~ "usa",
+    endsWith(country_clean, "merica") ~ "usa",
+    endsWith(country_clean, "stetes") ~ "usa",
+    endsWith(country_clean, "ayy") ~ "usa",
+    endsWith(country_clean, "tates.") ~ "usa",
+    endsWith(country_clean, "yyy") ~ "usa",
+    endsWith(country_clean, "merca") ~ "usa",
+    endsWith(country_clean, "tates") ~ "usa",
+    endsWith(country_clean, "alaska") ~ "usa",
+    endsWith(country_clean, "england") ~ "uk",
+    TRUE ~ as.character(country_clean))) 
+```
+
+```{r}
+#cleaning the country column - the hard way PART 2------------------------------
+all_candy_data <- all_candy_data %>% 
+  mutate(country_clean = case_when(
+    endsWith(country_clean, "6") ~ "unknown",
+    endsWith(country_clean, "2") ~ "unknown",
+    endsWith(country_clean, "lately") ~ "unknown",
+    endsWith(country_clean, "ud") ~ "unknown",
+    endsWith(country_clean, "tube") ~ "unknown",
+    endsWith(country_clean, "loathing") ~ "unknown",
+    endsWith(country_clean, "anymore") ~ "unknown",
+    endsWith(country_clean, "1") ~ "unknown",
+    TRUE ~ as.character(country_clean))) 
+
+```
+
+
+```{r}
+#cleaning the country column---------------------------------------------------
+all_candy_data <- all_candy_data %>% 
+  mutate(country_clean = case_when(
+    endsWith(country_clean, "equator") ~ "unknown",
+    endsWith(country_clean, " one") ~ "unknown",
+    endsWith(country_clean, "ones") ~ "unknown",
+    endsWith(country_clean, "old men") ~ "unknown",
+    endsWith(country_clean, ".0") ~ "unknown",
+    endsWith(country_clean, "where") ~ "unknown",
+    endsWith(country_clean, "see above") ~ "unknown",
+    endsWith(country_clean, "5") ~ "unknown",
+    endsWith(country_clean, "scotland") ~ "uk",
+    TRUE ~ as.character(country_clean))) 
+```
+
+```{r}
+distinct(all_candy_data, country_clean)
+```
+
+```{r} 
+# clean candy_type column to reduce distinct variables
+all_candy_data <- all_candy_data %>% 
+ mutate(candy_type = str_remove(candy_type, pattern = "q6_")) %>% 
+ mutate(candy_type = str_remove(candy_type, pattern = "_a_k_a")) %>% 
+ mutate(candy_type = str_remove(candy_type, pattern = "_a_friend_to_diabetes")) %>%
+ mutate(candy_type = str_remove(candy_type, pattern = "_mary_janes")) %>% 
+ mutate(candy_type = case_when(
+   startsWith(candy_type, "x") ~ "100_grand_bar",
+   startsWith(candy_type, "boxo") ~ "box_o_raisins",
+   TRUE ~ as.character(candy_type)
+ ))
+```
+
+
+
 
 
 
