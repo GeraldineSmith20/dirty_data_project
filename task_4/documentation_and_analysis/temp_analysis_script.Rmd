@@ -1,0 +1,59 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Load required packages
+```{r}
+library(tidyverse)
+library(here)
+```
+
+# Read in cleaned data
+```{r}
+clean_candy <- read_csv(here("clean_data/cleaned_candy_data"))
+
+```
+
+# Question 1 - What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
+```{r}
+clean_candy %>% 
+  filter(!is.na(candy_feelings)) %>% 
+  nrow()
+
+```
+
+# Question 2 - What was the average age of people who are going out trick or treating and the average age of people 3. not going trick or treating?
+```{r}
+clean_candy %>% 
+  filter(trick_or_treating == "Yes") %>% 
+  summarise(mean(age))
+```
+
+```{r}
+clean_candy %>% 
+  filter(trick_or_treating == "No") %>% 
+  summarise(mean(age))
+```
+
+# Question 3 - For each of joy, despair and meh, which candy bar revived the most of these ratings?
+```{r}
+clean_candy %>% 
+  filter(candy_feelings == "joy") %>% 
+  summarise(mean(age))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

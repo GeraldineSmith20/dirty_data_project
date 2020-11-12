@@ -1,0 +1,250 @@
+---
+title: "Candy Analysis Report"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction to Data Set
+The data set consisted of three separate xlsx sheets containing data on Halloween candy.  The data was from 2015 through to 2017.  It detailed preferences for various types of sweets, and also contained data on age, gender and country.  The raw data in all spreadsheets was supplied in wide format.
+
+## Assumptions
+In reviewing the analysis required for this data set, it was assumed that the only columns required would be age, gender, country, trick or treating, and the candy types.  
+
+It was also assumed that it would not be prudent to drop any na values in the cleaning stage.  Given the data set size was quite large, it would be difficult to determine how much of an effect dropping na's early would have.  
+
+## Cleaning the data
+
+1. Three separate data sets for each year where read in using _read_xlsx_ package.  Required packages loaded (tidyverse, janitor, readxl).
+2. Each data set was manipulated on it's own prior to appending to the others.
+3. For 2015 data, an id, gender, age, and country column were added in order to match the 2017 data.  Values were assigned to each column as as shown. The _clean_names_ and _rename_ functions were used to improve the variable names.
+```{r, eval=FALSE}
+candy_2015 <- clean_names(candy_2015) %>% 
+  mutate(internal_id = seq.int(1, 5630),
+         gender = "unknown",
+         country = "unknown",
+         year = 2015) %>% 
+  rename(age = how_old_are_you,
+         trick_or_treating = 
+           are_you_going_actually_going_trick_or_treating_yourself) %>% 
+  select(year,
+         internal_id, 
+         age, 
+         gender, 
+         trick_or_treating, 
+         country, 
+         butterfinger:york_peppermint_patties)
+```
+
+4. In order to make the data tidy, the _pivot_longer_ function was used to move the candy types and feelings into value-attribute pairs.
+```{r, eval=FALSE}
+candy_2015_tidy <- candy_2015 %>% 
+  pivot_longer(cols = c(butterfinger:york_peppermint_patties),
+               names_to = "candy_type",
+               values_to = "candy_feelings")
+```
+5. Similar steps were performed on the 2016 data, however this only needed an id and year column to be added.
+6. 2017 required minimal cleaning interventions, apart from using _clean_names_ on the variable names and selecting the required columns.
+7. With all variable names matching, the data could then be appended together as shown:
+```{r, eval=FALSE}
+all_candy_data <- bind_rows(candy_2015_tidy, candy_2016_tidy, candy_2017_tidy)
+```
+8. Age - this was stored as a character and there were some decimal values so it was decided that these should be changed to numeric and the decimals removed.  It was also decided to impute the NA values with the median of age for the full dataset:
+```{r, eval=FALSE}
+all_candy_data <- all_candy_data %>% 
+  mutate(age = str_extract(age, pattern = "[0-9]{2}")) %>%
+  mutate(age = as.numeric(age)) %>% 
+  mutate(age = coalesce(age, median(age, na.rm = TRUE)))
+```
+9. Gender - this required minimal cleaning, but it was decided to replace the NA values with "unknown" and "I'd rather not say" with "undisclosed".
+10. Country - this required lots of hard coding! I explored trying to use Regex to change the variable based on certain conditions but could not make any code work so decided to hard code to remove the variation.  The _distinct_ function was used to determine the variety of values, then _mutate_ and _case_when_ were used to recode.  An extract is shown below.  The country variable was reduced from 170 to 54.
+```{r, eval=FALSE}
+all_candy_data <- all_candy_data %>% 
+  mutate(country_clean = tolower(country)) %>% 
+  mutate(country_clean = case_when(
+    startsWith(country_clean,"uni") ~ "usa",
+    startsWith(country_clean, "usa") ~ "usa",
+    startsWith(country_clean, "u.") ~ "usa",
+    startsWith(country_clean, "us") ~ "usa",
+    startsWith(country_clean, "u s") ~ "usa",
+    startsWith(country_clean, "trump") ~ "usa",
+    startsWith(country_clean, "mur") ~ "usa",
+    startsWith(country_clean, "new") ~ "usa",
+    startsWith(country_clean, "north carolina") ~ "usa",
+    startsWith(country_clean, "pitts") ~ "usa",
+    startsWith(country_clean, "the netherlands") ~ "netherlands",
+    startsWith(country_clean, "god") ~ "unknown",
+    startsWith(country_clean, "not the") ~ "unknown",
+    startsWith(country_clean, "espa") ~ "spain",
+    TRUE ~ as.character(country_clean)))
+```
+11. Candy type - this required some minimal recoding to reduce the number of variables from 219 to 124.
+```{r, eval=FALSE}
+all_candy_data <- all_candy_data %>% 
+  mutate(candy_type = str_remove(candy_type, pattern = "q6_")) %>% 
+  mutate(candy_type = str_remove(candy_type, pattern = "_a_k_a")) %>% 
+  mutate(candy_type = str_remove(candy_type, pattern = "_a_friend_to_diabetes")) %>%
+  mutate(candy_type = str_remove(candy_type, pattern = "_mary_janes")) %>% 
+  mutate(candy_type = case_when(
+    startsWith(candy_type, "x") ~ "100_grand_bar",
+    startsWith(candy_type, "boxo") ~ "box_o_raisins",
+    TRUE ~ as.character(candy_type)
+  ))
+```
+12. The final step was to write the data frame to a new csv file in the cleaned data folder, ready for analysis.
+
+
+## Analysis of the Data
+
+### Load required packages
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(here)
+```
+
+### Read in cleaned data
+```{r, warning=FALSE, message=FALSE}
+clean_candy <- read_csv(here("clean_data/cleaned_candy_data"))
+
+```
+
+### Question 1 - What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
+```{r}
+clean_candy %>% 
+  filter(!is.na(candy_feelings)) %>% 
+  nrow()
+
+```
+
+### Question 2 - What was the average age of people who are going out trick or treating and the average age of people 3. not going trick or treating?
+```{r}
+clean_candy %>% 
+  filter(trick_or_treating == "Yes") %>% 
+  summarise(mean(age))
+```
+
+```{r}
+clean_candy %>% 
+  filter(trick_or_treating == "No") %>% 
+  summarise(mean(age))
+```
+
+### Question 3 - For each of joy, despair and meh, which candy bar received the most of these ratings?
+```{r, warning=FALSE, message=FALSE}
+clean_candy %>% 
+  filter(candy_feelings == "joy") %>% 
+  group_by(candy_type) %>% 
+  summarise(no_ratings = n()) %>% 
+  slice_max(no_ratings)
+  
+```
+```{r, warning=FALSE, message=FALSE}
+clean_candy %>% 
+  filter(candy_feelings == "despair") %>% 
+  group_by(candy_type) %>% 
+  summarise(no_ratings = n()) %>% 
+  slice_max(no_ratings)
+```
+```{r, warning=FALSE, message=FALSE}
+clean_candy %>% 
+  filter(candy_feelings == "meh") %>% 
+  group_by(candy_type) %>% 
+  summarise(no_ratings = n()) %>% 
+  slice_max(no_ratings)
+```
+
+### Question 4 - How many people rated Starburst as despair?
+```{r, warning=FALSE, message=FALSE}
+clean_candy %>% 
+  filter(candy_type == "starburst") %>% 
+  filter(candy_feelings == "despair") %>% 
+  nrow()
+```
+
+
+### For the next three questions, count despair as -1, joy as +1 and meh as 0.
+```{r, warning=FALSE, message=FALSE}
+clean_candy_rated <- clean_candy %>% 
+  mutate(candy_feelings = case_when(
+    candy_feelings == "joy" ~ 1,
+    candy_feelings == "despair" ~ -1,
+    candy_feelings == "meh" ~ 0,
+    TRUE ~ 0
+  )) %>% 
+  select(-country) %>% 
+  mutate(country_clean = trimws(country_clean))
+  
+```
+
+### Question 6 - What was the most popular candy bar by this rating system for each gender in the dataset?
+```{r, warning=FALSE, message=FALSE}
+clean_candy_rated %>% 
+  group_by(gender, candy_type) %>% 
+  summarise(total_score = sum(candy_feelings)) %>% 
+  slice_max(total_score)
+```
+
+### Question 7 - What was the most popular candy bar in each year?
+```{r, warning=FALSE, message=FALSE}
+clean_candy_rated %>% 
+  group_by(year, candy_type) %>% 
+  summarise(total_score = sum(candy_feelings)) %>% 
+  slice_max(total_score)
+```
+
+### Question 8 - What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
+```{r, warning=FALSE, message=FALSE}
+clean_candy_rated %>% 
+  filter(country_clean %in% c("usa", "canada", "uk")) %>% 
+  group_by(country_clean, candy_type) %>% 
+  summarise(total_score = sum(candy_feelings)) %>% 
+  slice_max(total_score)
+```
+```{r, warning=FALSE, message=FALSE}
+clean_candy_rated %>% 
+  filter(!country_clean %in% c("usa", "canada", "uk")) %>% 
+  group_by(candy_type) %>% 
+  summarise(total_score = sum(candy_feelings)) %>% 
+  slice_max(total_score)
+```
+
+
+## Other Analysis or Conclusions
+
+### Question - What is the worst candy according to the USA, Canada and the UK?
+```{r, warning=FALSE, message=FALSE}
+clean_candy_rated %>% 
+  filter(country_clean %in% c("usa", "canada", "uk")) %>% 
+  group_by(country_clean, candy_type) %>% 
+  summarise(total_score = sum(candy_feelings)) %>% 
+  slice_min(total_score)
+```
+
+
+## Conclusions
+* Free text columns are never a good idea!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
