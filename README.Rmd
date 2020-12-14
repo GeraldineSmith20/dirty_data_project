@@ -1,0 +1,36 @@
+---
+title: "README"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+This project revolved around the cleaning and wrangling of data, which is purported to be 80% of a Data Analysts role!  The project is divided into two separate tasks - cleaning and analysis of Seabird observation data (task 3) and cleaning and analysis of Halloween Candy data (task 4).
+
+## Seabirds
+
+#### Project Methodology
+The Seabirds data records seabird observations during the period 31st July 1969 to 21st December 1990 and was in the form of an .xls file , so tidyverse functionality was used to read this in.  Additional data was also required from ship data and so this was also read in and joined with the seabird data.  
+Cleaning was required in order to rename columns (using the _janitor_ package), and there were also a number of redundant columns which were removed.  Some of the columns had extraneous information so some recoding was performed using Regex to remove redundant strings.
+
+#### Analysis
+Analysis of the data was performed using the _dplyr_ package from tidyverse.
+Insights such as the highest number of observations, and number of solitary birds were gained.
+
+## Halloween Candy
+
+#### Project Methodology
+The Halloween Candy data set consisted of three separate xlsx sheets containing data on Halloween candy.  The data was from 2015 through to 2017. It detailed preferences for various types of sweets, and also contained data on age, gender and country. 
+
+Cleaning was performed using _janitor_ to rename columns.  The raw data was in wide format so required some pivoting.  Regex was used to recode some of the variables, and due to free text columns in the data, some hard coding was required to reduce the number of distinct variables.
+
+#### Analysis
+Analysis of the data was performed using the _dplyr_ package from tidyverse.
+Insights such as the most popular candy bar, and average age of trick-or-treaters were gained.
+
+
+
+
